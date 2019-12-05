@@ -112,7 +112,7 @@ class Beachline{
 		assert(false);
 	}
 
-	pair<node*, node*> find_lowest(double x){
+	pair<node*, node*> find_beachline(double x){
 		node* cur = root;
 		while(cur){
 			double left = cur->prv ? intersect(cur->prv->point, cur->point) : -1e10;
@@ -142,6 +142,10 @@ struct event{
 };
 
 void VoronoiDiagram(vector<pdd> input, vector<pdd> &vertex, vector<pii> &edge, vector<pii> &area){
+	vertex = input;
+	for(int i = 0; i < input.size(); i++) edge.emplace_back(i, i+1 == input.size()? 0 : i+1);
+	return;
+
 	int n = input.size(), cnt = 0;
 	Beachline beachline = Beachline();
 	arr = new BeachNode[n*4];
@@ -158,18 +162,18 @@ void VoronoiDiagram(vector<pdd> input, vector<pdd> &vertex, vector<pii> &edge, v
 		if(q.type == 0){
 			pdd point = input[idx];
 			BeachNode *cur, *nxt;
-			tie(cur, nxt) = beachline.find_lowest(point.first);
+			tie(cur, nxt) = beachline.find_beachline(point.first);
 			if(nxt){
 				int v = vertex.size();
 				*(cur->end) = v;
 				vertex.push_back(get_circumcenter(cur->point, nxt->point, point));
 
 				edge.emplace_back(v, -1);
-				area.emplace_back(idx, cur->idx);
+				area.emplace_back(cur->idx, idx);
 				cur->end = &edge.back().second;
 				
 				edge.emplace_back(v, -1);
-				area.emplace_back(nxt->idx, idx);
+				area.emplace_back(idx, nxt->idx);
 				cur->end = &edge.back().second;
 			}
 			else{
@@ -179,7 +183,7 @@ void VoronoiDiagram(vector<pdd> input, vector<pdd> &vertex, vector<pii> &edge, v
 				beachline.insert(cur2, site, 0);
 
 				edge.emplace_back(-1, -1);
-				area.emplace_back(idx, cur->idx);
+				area.emplace_back(cur->idx, idx);
 				site->end = &edge.back().first;
 				cur2->end = &edge.back().second;
 
@@ -200,7 +204,7 @@ void VoronoiDiagram(vector<pdd> input, vector<pdd> &vertex, vector<pii> &edge, v
 			vertex.push_back(get_circumcenter(prv->point, nxt->point, cur->point));
 
 			edge.emplace_back(v, -1);
-			area.emplace_back(nxt->idx, prv->idx);
+			area.emplace_back(prv->idx, nxt->idx);
 			prv->end = &edge.back().second;
 			
 			beachline.erase(cur);
