@@ -125,7 +125,6 @@ int main(int argc, char** argv) {
 	printf("start\n");
 	VoronoiDiagram(input, vertex, edge, area);
 	printf("end\n");
-	return 0;
 
 /*
 	printf("vertex : \n");
