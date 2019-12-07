@@ -1,7 +1,7 @@
 # VoronoiDiagram
 Fortune's Algorithm (for ICPC)
 
-![Voronoi Diagram](https://github.com/zigui-ps/VoronoiDiagram/blob/master/Voronoi.png)
+![Voronoi Diagram](https://github.com/zigui-ps/VoronoiDiagram/blob/master/inputs/Voronoi.png)
 
 Code is in ```VoronoiDiagram.cpp```
 
