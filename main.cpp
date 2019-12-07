@@ -36,16 +36,16 @@ void display() {
 		pdd d = r90(input[area[i].second] - input[area[i].first]), u, v;
 		pdd m = 0.5 * (input[area[i].second] + input[area[i].first]);
 		if(edge[i] == pii(-1, -1)){
-			u = m - 100 * d;
-			v = m + 100 * d;
+			u = m - 1e9 * d;
+			v = m + 1e9 * d;
 		}
 		else if(edge[i].first == -1){
 			v = vertex[edge[i].second];
-			u = v - 100 * d;
+			u = v - 1e9 * d;
 		}
 		else if(edge[i].second == -1){
 			u = vertex[edge[i].first];
-			v = u + 100 * d;
+			v = u + 1e9 * d;
 		}
 		else{
 			u = vertex[edge[i].first];
@@ -62,7 +62,7 @@ void display() {
 	for(int i = 0; i < vertex.size(); i++){
 		double x = vertex[i].first, y = vertex[i].second;
 		glBegin(GL_POLYGON);
-		double R = 1. / 1080 * 2;
+		double R = 1. / 1080 * 6;
 		glVertex2d(x - R / scale, y);
 		glVertex2d(x, y + R / scale);
 		glVertex2d(x + R / scale, y);
@@ -74,7 +74,7 @@ void display() {
 	for(int i = 0; i < input.size(); i++){
 		double x = input[i].first, y = input[i].second;
 		glBegin(GL_POLYGON);
-		double R = 1. / 1080 * 2;
+		double R = 1. / 1080 * 6;
 		glVertex2d(x - R / scale, y);
 		glVertex2d(x, y + R / scale);
 		glVertex2d(x + R / scale, y);

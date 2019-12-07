@@ -41,7 +41,7 @@ class Beachline{
 	public:
 		struct node{
 			node(){}
-			node(pdd point, int idx, int end):point(point), idx(idx), end(end), 
+			node(pdd point, int idx):point(point), idx(idx), end(0), 
 				link{0, 0}, par(0), prv(0), nxt(0) {}
 			pdd point; int idx; int end;
 			node *link[2], *par, *prv, *nxt;
@@ -111,27 +111,21 @@ class Beachline{
 			next_sweep = p.second + size(p - cur->point);
 			return true;
 		}
-		pair<node*, node*> find_beachline(double x){
+		node* find_beachline(double x){
 			node* cur = root;
-			pair<node*, node*> answer;
 			while(cur){
 				double left = cur->prv ? parabola_intersect(cur->prv->point, cur->point, sweepline) : -1e10;
 				double right = cur->nxt ? parabola_intersect(cur->point, cur->nxt->point, sweepline) : 1e10;
-				if(dcmp(x - left) == 0){ answer = make_pair(cur->prv, cur); break; }
-				if(dcmp(right - x) == 0){ answer = make_pair(cur, cur->nxt); break; }
-				if(dcmp(x - left) == 1 && dcmp(right - x) == 1){ answer = make_pair(cur, (node*)NULL); break; }
-				if(dcmp(x - left) == -1) cur = cur->link[0];
-				else cur = cur->link[1];
+				if(0 <= dcmp(x-left) && dcmp(x-right) <= 0){ splay(cur); return cur; }
+				cur = cur->link[dcmp(x-right) == 1];
 			}
-			splay(cur);
-			return answer;
 		}
 }; using BeachNode = Beachline::node;
 
-BeachNode* arr;
-int sz;
-BeachNode* new_node(pdd point, int idx, int end){
-	arr[sz] = BeachNode(point, idx, end);
+static BeachNode* arr;
+static int sz;
+static BeachNode* new_node(pdd point, int idx){
+	arr[sz] = BeachNode(point, idx);
 	return arr + (sz++);
 }
 
@@ -145,84 +139,54 @@ struct event{
 };
 
 void VoronoiDiagram(vector<pdd> &input, vector<pdd> &vertex, vector<pii> &edge, vector<pii> &area){
-	auto write_edge = [&](int idx, int v){ 
-		if(idx%2 == 0) edge[idx/2].first = v;
-		else edge[idx/2].second = v; 
-	};
-
-	int n = input.size(), cnt = 0;
 	Beachline beachline = Beachline();
-	arr = new BeachNode[n*4]; sz = 0;
-
 	priority_queue<event, vector<event>, greater<event>> events;
+	
+	auto add_edge = [&](int u, int v, int a, int b, BeachNode* c1, BeachNode* c2){
+		if(c1) c1->end = edge.size()*2;
+		if(c2) c2->end = edge.size()*2 + 1;
+		edge.emplace_back(u, v);
+		area.emplace_back(a, b);
+	};
+	auto write_edge = [&](int idx, int v){ idx%2 == 0 ? edge[idx/2].first = v : edge[idx/2].second = v; };
+	auto add_event = [&](BeachNode* cur){ double nxt; if(beachline.get_event(cur, nxt)) events.emplace(nxt, cur); };
+	
+	int n = input.size(), cnt = 0;
+	arr = new BeachNode[n*4]; sz = 0;
 	sort(input.begin(), input.end(), [](const pdd &l, const pdd &r){
 		return l.second != r.second ? l.second < r.second : l.first < r.first;
 	});
 	
-	BeachNode* tmp = beachline.root = new_node(input[0], 0, -1);
+	BeachNode* tmp = beachline.root = new_node(input[0], 0), *t2;
 	for(int i = 1; i < n; i++){
 		if(dcmp(input[i].second - input[0].second) == 0){
-			BeachNode* t2 = new_node(input[i], i, edge.size()*2 + 1);
-			edge.emplace_back(-1, -1);
-			area.emplace_back(i-1, i);
-			beachline.insert(t2, tmp, 1);
+			add_edge(-1, -1, i-1, i, 0, tmp);
+			beachline.insert(t2 = new_node(input[i], i), tmp, 1);
 			tmp = t2;
 		}
 		else events.emplace(input[i].second, i);
 	}
 	while(events.size()){
 		event q = events.top(); events.pop();
+		BeachNode *prv, *cur, *nxt, *site;
+		int v = vertex.size(), idx = q.idx;
 		beachline.sweepline = q.sweep;
 		if(q.type == 0){
-			int idx = q.idx;
 			pdd point = input[idx];
-			BeachNode *cur, *nxt;
-			tie(cur, nxt) = beachline.find_beachline(point.first);
-			if(nxt){
-				int v = vertex.size();
-				write_edge(cur->end, v);
-				vertex.push_back(get_circumcenter(cur->point, nxt->point, point));
-
-				BeachNode* site = new_node(point, idx, edge.size()*2 + 1);
-				beachline.insert(site, nxt, 0);
-				edge.emplace_back(v, -1);
-				area.emplace_back(idx, nxt->idx);
-
-				cur->end = edge.size()*2 + 1;
-				edge.emplace_back(v, -1);
-				area.emplace_back(cur->idx, idx);
-			}
-			else{
-				BeachNode* site = new_node(point, idx, edge.size()*2);
-				BeachNode* cur2 = new_node(cur->point, cur->idx, edge.size()*2 + 1);
-				beachline.insert(site, cur, 0);
-				beachline.insert(cur2, site, 0);
-
-				edge.emplace_back(-1, -1);
-				area.emplace_back(cur->idx, idx);
-
-				double next_sweep;
-				if(beachline.get_event(cur, next_sweep)) events.emplace(next_sweep, cur);
-				if(beachline.get_event(cur2, next_sweep)) events.emplace(next_sweep, cur2);
-			}
+			cur = beachline.find_beachline(point.first);
+			beachline.insert(site = new_node(point, idx), cur, 0);
+			beachline.insert(prv = new_node(cur->point, cur->idx), site, 0);
+			add_edge(-1, -1, cur->idx, idx, site, prv);
+			add_event(prv); add_event(cur);
 		}
 		else{
-			BeachNode* cur = q.cur, *prv = cur->prv, *nxt = cur->nxt;
+			cur = q.cur, prv = cur->prv, nxt = cur->nxt;
 			if(!prv || !nxt || prv->idx != q.prv || nxt->idx != q.nxt) continue;
-
-			int v = vertex.size();
-			write_edge(prv->end, v);
-			write_edge(cur->end, v);
 			vertex.push_back(get_circumcenter(prv->point, nxt->point, cur->point));
-
-			prv->end = edge.size()*2 + 1;
-			edge.emplace_back(v, -1);
-			area.emplace_back(prv->idx, nxt->idx);
-
+			write_edge(prv->end, v); write_edge(cur->end, v);
+			add_edge(v, -1, prv->idx, nxt->idx, 0, prv);
 			beachline.erase(cur);
-			double next_sweep;
-			if(beachline.get_event(prv, next_sweep)) events.emplace(next_sweep, prv);
-			if(beachline.get_event(nxt, next_sweep)) events.emplace(next_sweep, nxt);
+			add_event(prv); add_event(nxt);
 		}
 	}
 	delete arr;
