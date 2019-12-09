@@ -3,6 +3,7 @@
 #include<queue>
 #include<cmath>
 #include<algorithm>
+#include <GL/glut.h>
 
 using namespace std;
 
@@ -145,10 +146,11 @@ struct event{
 	bool operator>(const event &l)const{ return sweep > l.sweep; }
 };
 
+static priority_queue<event, vector<event>, greater<event>> events;
+static Beachline beachline;
 void VoronoiDiagram(vector<pdd> &input, vector<pdd> &vertex, vector<pii> &edge, vector<pii> &area){
-	Beachline beachline = Beachline();
-	priority_queue<event, vector<event>, greater<event>> events;
-
+	while(events.size()) events.pop();
+	beachline = Beachline();
 	auto add_edge = [&](int u, int v, int a, int b, BeachNode* c1, BeachNode* c2){
 		if(c1) c1->end = edge.size()*2;
 		if(c2) c2->end = edge.size()*2 + 1;
@@ -198,3 +200,120 @@ void VoronoiDiagram(vector<pdd> &input, vector<pdd> &vertex, vector<pii> &edge, 
 	}
 	delete arr;
 }
+
+void VoronoiDiagram_init(vector<pdd> &input, vector<pdd> &vertex, vector<pii> &edge, vector<pii> &area){
+	auto add_edge = [&](int u, int v, int a, int b, BeachNode* c1, BeachNode* c2){
+		if(c1) c1->end = edge.size()*2;
+		if(c2) c2->end = edge.size()*2 + 1;
+		edge.emplace_back(u, v);
+		area.emplace_back(a, b);
+	};
+	while(events.size()) events.pop();
+	beachline = Beachline();
+	
+	int n = input.size(), cnt = 0;
+	if(arr) delete arr;
+	arr = new BeachNode[n*4]; sz = 0;
+	sort(input.begin(), input.end(), [](const pdd &l, const pdd &r){
+			return l.second != r.second ? l.second < r.second : l.first < r.first;
+			});
+
+	BeachNode* tmp = beachline.root = new_node(input[0], 0), *t2;
+	for(int i = 1; i < n; i++){
+		if(dcmp(input[i].second - input[0].second) == 0){
+			add_edge(-1, -1, i-1, i, 0, tmp);
+			beachline.insert(t2 = new_node(input[i], i), tmp, 1);
+			tmp = t2;
+		}
+		else events.emplace(input[i].second, i);
+	}
+}
+
+bool VoronoiDiagram_step(vector<pdd> &input, vector<pdd> &vertex, vector<pii> &edge, vector<pii> &area){
+	auto add_edge = [&](int u, int v, int a, int b, BeachNode* c1, BeachNode* c2){
+		if(c1) c1->end = edge.size()*2;
+		if(c2) c2->end = edge.size()*2 + 1;
+		edge.emplace_back(u, v);
+		area.emplace_back(a, b);
+	};
+	auto write_edge = [&](int idx, int v){ idx%2 == 0 ? edge[idx/2].first = v : edge[idx/2].second = v; };
+	auto add_event = [&](BeachNode* cur){ double nxt; if(beachline.get_event(cur, nxt)) events.emplace(nxt, cur); };
+
+	while(events.size()){
+		event q = events.top(); events.pop();
+		BeachNode *prv, *cur, *nxt, *site;
+		int v = vertex.size(), idx = q.idx;
+		beachline.sweepline = q.sweep;
+		if(q.type == 0){
+			pdd point = input[idx];
+			cur = beachline.find_beachline(point.first);
+			beachline.insert(site = new_node(point, idx), cur, 0);
+			beachline.insert(prv = new_node(cur->point, cur->idx), site, 0);
+			add_edge(-1, -1, cur->idx, idx, site, prv);
+			add_event(prv); add_event(cur);
+		}
+		else{
+			cur = q.cur, prv = cur->prv, nxt = cur->nxt;
+			if(!prv || !nxt || prv->idx != q.prv || nxt->idx != q.nxt) continue;
+			vertex.push_back(get_circumcenter(prv->point, nxt->point, cur->point));
+			write_edge(prv->end, v); write_edge(cur->end, v);
+			add_edge(v, -1, prv->idx, nxt->idx, 0, prv);
+			beachline.erase(cur);
+			add_event(prv); add_event(nxt);
+		}
+		break;
+	}
+	return events.empty();
+}
+
+void draw_beachline(double st, double en, double scale){
+	double yd = beachline.sweepline;
+	glColor3f(0.0f, 1.0f, 0.0f);
+	glBegin(GL_LINES);
+	glVertex2d(st, beachline.sweepline);
+	glVertex2d(en, beachline.sweepline);
+
+	glColor3f(0.0f, 0.0f, 1.0f);
+	for(int i = 0; i <= 1080; i++){
+		double x = st + (en-st)/1080.0 * i;
+		BeachNode *cur = beachline.find_beachline(x);
+		double xf = cur->point.first, yf = cur->point.second;
+		double y;
+		if(dcmp(yf-yd) == 0) y = yd;
+		else y = sq(x-xf) / 2.0 / (yf-yd) + (yf+yd)/2;
+
+		int c2 = 1;
+		if(i != 0 && i != 1080) c2 = 2;
+		for(int i = 0; i < c2; i++) glVertex2d(x, y);
+	}
+
+	BeachNode* cur = beachline.root;
+	while(cur->prv) cur = cur->prv;
+	do{
+		if(dcmp(cur->point.second - beachline.sweepline) == 0){
+			double xf = cur->nxt->point.first, yf = cur->nxt->point.second;
+			double x = cur->point.first;
+			double y = sq(x-xf) / 2.0 / (yf - beachline.sweepline) + (yf+yd)/2;
+			glVertex2d(x, y);
+			glVertex2d(x, beachline.sweepline);
+		}
+		cur = cur->nxt;
+	}while(cur);
+	glEnd();
+}
+
+void draw_event(vector<pdd> &input, double st, double en, double scale){
+	priority_queue<event, vector<event>, greater<event>> tmp;
+	glBegin(GL_LINES);
+	glColor3f(0.0f, 1.0f, 0.0f);
+	while(events.size()){
+		auto p = events.top(); events.pop();
+		tmp.push(p);
+		glVertex2d(st, p.sweep);
+		glVertex2d(en, p.sweep);
+	}
+	glEnd();
+	events.swap(tmp);
+}
+
+bool is_end(){ return events.empty(); }

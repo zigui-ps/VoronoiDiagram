@@ -14,6 +14,11 @@ std::vector<pii> edge;
 std::vector<pii> area;
 
 void VoronoiDiagram(std::vector<pdd> &input, std::vector<pdd> &vertex, std::vector<pii> &edge, std::vector<pii> &area);
+void VoronoiDiagram_init(std::vector<pdd> &input, std::vector<pdd> &vertex, std::vector<pii> &edge, std::vector<pii> &area);
+bool VoronoiDiagram_step(std::vector<pdd> &input, std::vector<pdd> &vertex, std::vector<pii> &edge, std::vector<pii> &area);
+void draw_beachline(double st, double en, double scale);
+void draw_event(std::vector<pdd> &input, double st, double en, double scale);
+bool is_end();
 
 extern double operator / (pdd a,    pdd b); //{ return a.first * b.second - a.second * b.first; }
 extern pdd    operator * (double b, pdd a); //{ return pdd(b * a.first, b * a.second); }
@@ -82,6 +87,11 @@ void display() {
 		glEnd();
 	}
 
+	if(!is_end()){
+		draw_beachline(-dx - 1.0 / scale, -dx + 1.0 / scale, scale);
+		draw_event(input, -dx - 1.0 / scale, -dx + 1.0 / scale, scale);
+	}
+
 	glPopMatrix();
 	glutSwapBuffers();
 }
@@ -92,6 +102,19 @@ void mouse(int button, int state, int x, int y){
 	if(button == 0) Ox = x, Oy = y;
 	else if(button == 3) scale *= 1.1;
 	else if(button == 4) scale /= 1.1;
+}
+
+void keyboard(unsigned char key, int x, int y){
+	if(key == 'q') VoronoiDiagram_step(input, vertex, edge, area);
+	if(key == 'z'){
+		while(!VoronoiDiagram_step(input, vertex, edge, area));
+	}
+	if(key == 'r'){
+		vertex.clear();
+		edge.clear();
+		area.clear();
+		VoronoiDiagram_init(input, vertex, edge, area);
+	}
 }
 
 void motion(int x, int y){
@@ -123,7 +146,7 @@ int main(int argc, char** argv) {
 	dx = -(rx+lx)/2, dy = (ry+ly)/2;
 	scale = 1. / std::max(rx-lx, ry-ly);
 	printf("start\n");
-	VoronoiDiagram(input, vertex, edge, area);
+	VoronoiDiagram_init(input, vertex, edge, area);
 	printf("end\n");
 
 /*
@@ -137,6 +160,7 @@ int main(int argc, char** argv) {
 	glutInitWindowSize(1080, 1080);
 	glutCreateWindow("OpenGL Setup Test");
 	glutDisplayFunc(display);
+	glutKeyboardFunc(keyboard);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 	glutTimerFunc(1000.0 / 30, nextTimestep, 0);
