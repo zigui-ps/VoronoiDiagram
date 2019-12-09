@@ -1,7 +1,9 @@
-n = 1000000
-puts n
+n = 100000
+puts n*2
 n.times do |i|
-	puts "%d %d" % [i, i]
+	i += 1
+	puts "%d %d" % [i, -i]
+	puts "%d %d" % [-i, -i]
 end
 
 

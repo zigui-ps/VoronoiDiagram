@@ -29,23 +29,19 @@ pdd get_circumcenter(pdd p0, pdd p1, pdd p2){
 
 // https://www.youtube.com/watch?v=h_vvP4ah6Ck
 double parabola_intersect(pdd left, pdd right, double sweepline){
-	int sign;
-	double t1, t2;
-	if(fabs(left.second - right.second) < fabs(left.first - right.first)){
-		sign = left.first < right.first ? 1 : -1;
+	auto f2 = [](pdd left, pdd right, double sweepline){
+		int sign = left.first < right.first ? 1 : -1;
 		pdd m = 0.5 * (left+right);
 		pdd v = line_intersect(m, r90(right-left), pdd(0, sweepline), pdd(1, 0));
 		pdd w = line_intersect(m, r90(left-v), v, left-v);
 		double l1 = size(v-w), l2 = sqrt(sq(sweepline-m.second) - sz2(m-w)), l3 = size(left-v);
 		return v.first + (m.first - v.first) * l3 / (l1 + sign * l2);
-	}
-	else{
-		sign = left.second < right.second ? -1 : 1;
-		pdd v = line_intersect(left, right-left, pdd(0, sweepline), pdd(1, 0));
-		double d1 = sz2(0.5 * (left+right) - v), d2 = sz2(0.5 * (left-right));
-		double t3 = v.first + sign * sqrt(d1 - d2);
-		return v.first + sign * sqrt(d1 - d2);
-	}
+	};
+	int sign = left.second < right.second ? -1 : 1;
+	pdd v = line_intersect(left, right-left, pdd(0, sweepline), pdd(1, 0));
+	double d1 = sz2(0.5 * (left+right) - v), d2 = sz2(0.5 * (left-right));
+	if(d2 <= d1 * 1e-18) return f2(left, right, sweepline);
+	return v.first + sign * sqrt(d1 - d2);
 }
 
 class Beachline{
@@ -152,7 +148,7 @@ struct event{
 void VoronoiDiagram(vector<pdd> &input, vector<pdd> &vertex, vector<pii> &edge, vector<pii> &area){
 	Beachline beachline = Beachline();
 	priority_queue<event, vector<event>, greater<event>> events;
-	
+
 	auto add_edge = [&](int u, int v, int a, int b, BeachNode* c1, BeachNode* c2){
 		if(c1) c1->end = edge.size()*2;
 		if(c2) c2->end = edge.size()*2 + 1;
@@ -161,13 +157,13 @@ void VoronoiDiagram(vector<pdd> &input, vector<pdd> &vertex, vector<pii> &edge, 
 	};
 	auto write_edge = [&](int idx, int v){ idx%2 == 0 ? edge[idx/2].first = v : edge[idx/2].second = v; };
 	auto add_event = [&](BeachNode* cur){ double nxt; if(beachline.get_event(cur, nxt)) events.emplace(nxt, cur); };
-	
+
 	int n = input.size(), cnt = 0;
 	arr = new BeachNode[n*4]; sz = 0;
 	sort(input.begin(), input.end(), [](const pdd &l, const pdd &r){
-		return l.second != r.second ? l.second < r.second : l.first < r.first;
-	});
-	
+			return l.second != r.second ? l.second < r.second : l.first < r.first;
+			});
+
 	BeachNode* tmp = beachline.root = new_node(input[0], 0), *t2;
 	for(int i = 1; i < n; i++){
 		if(dcmp(input[i].second - input[0].second) == 0){
