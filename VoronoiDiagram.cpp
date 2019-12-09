@@ -29,12 +29,23 @@ pdd get_circumcenter(pdd p0, pdd p1, pdd p2){
 
 // https://www.youtube.com/watch?v=h_vvP4ah6Ck
 double parabola_intersect(pdd left, pdd right, double sweepline){
-	if(dcmp(left.second - right.second) == 0) return (left.first + right.first) / 2;
-	int sign = -1;
-	if(left.second > right.second) swap(left, right), sign = 1;
-	pdd v = line_intersect(left, right-left, pdd(0, sweepline), pdd(1, 0));
-	double d1 = sz2(0.5 * (left+right) - v), d2 = sz2(0.5 * (left-right));
-	return v.first + sign * sqrt(d1 - d2);
+	int sign;
+	double t1, t2;
+	if(fabs(left.second - right.second) < fabs(left.first - right.first)){
+		sign = left.first < right.first ? 1 : -1;
+		pdd m = 0.5 * (left+right);
+		pdd v = line_intersect(m, r90(right-left), pdd(0, sweepline), pdd(1, 0));
+		pdd w = line_intersect(m, r90(left-v), v, left-v);
+		double l1 = size(v-w), l2 = sqrt(sq(sweepline-m.second) - sz2(m-w)), l3 = size(left-v);
+		return v.first + (m.first - v.first) * l3 / (l1 + sign * l2);
+	}
+	else{
+		sign = left.second < right.second ? -1 : 1;
+		pdd v = line_intersect(left, right-left, pdd(0, sweepline), pdd(1, 0));
+		double d1 = sz2(0.5 * (left+right) - v), d2 = sz2(0.5 * (left-right));
+		double t3 = v.first + sign * sqrt(d1 - d2);
+		return v.first + sign * sqrt(d1 - d2);
+	}
 }
 
 class Beachline{
@@ -49,7 +60,7 @@ class Beachline{
 		node *root;
 		double sweepline;
 
-		Beachline() : sweepline(-1e10), root(NULL){ }
+		Beachline() : sweepline(-1e20), root(NULL){ }
 		inline int dir(node *x){ return x->par->link[0] != x; }
 
 		//     p        n          p            n
@@ -114,10 +125,10 @@ class Beachline{
 		node* find_beachline(double x){
 			node* cur = root;
 			while(cur){
-				double left = cur->prv ? parabola_intersect(cur->prv->point, cur->point, sweepline) : -1e10;
-				double right = cur->nxt ? parabola_intersect(cur->point, cur->nxt->point, sweepline) : 1e10;
-				if(0 <= dcmp(x-left) && dcmp(x-right) <= 0){ splay(cur); return cur; }
-				cur = cur->link[dcmp(x-right) == 1];
+				double left = cur->prv ? parabola_intersect(cur->prv->point, cur->point, sweepline) : -1e30;
+				double right = cur->nxt ? parabola_intersect(cur->point, cur->nxt->point, sweepline) : 1e30;
+				if(left <= x && x <= right){ splay(cur); return cur; }
+				cur = cur->link[x > right];
 			}
 		}
 }; using BeachNode = Beachline::node;

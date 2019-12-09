@@ -36,16 +36,16 @@ void display() {
 		pdd d = r90(input[area[i].second] - input[area[i].first]), u, v;
 		pdd m = 0.5 * (input[area[i].second] + input[area[i].first]);
 		if(edge[i] == pii(-1, -1)){
-			u = m - 1e9 * d;
-			v = m + 1e9 * d;
+			u = m - 1e3 * d;
+			v = m + 1e3 * d;
 		}
 		else if(edge[i].first == -1){
 			v = vertex[edge[i].second];
-			u = v - 1e9 * d;
+			u = v - 1e3 * d;
 		}
 		else if(edge[i].second == -1){
 			u = vertex[edge[i].first];
-			v = u + 1e9 * d;
+			v = u + 1e3 * d;
 		}
 		else{
 			u = vertex[edge[i].first];

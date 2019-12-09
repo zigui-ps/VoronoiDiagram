@@ -1,3 +1,11 @@
+n = 1000000
+puts n
+n.times do |i|
+	puts "%d %d" % [i, i]
+end
+
+
+=begin
 n = 20
 m = 10
 puts n*m
