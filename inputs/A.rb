@@ -1,15 +1,32 @@
-n = 100000
+n = 1000000
+puts n
+n.times do |i|
+	puts "%d %d" % [rand() * 1e9, rand() * 1e9]
+end
+
+=begin
+n = 1000000
+puts n
+n.times do |i|
+	d = rand() * 2 * Math::PI
+	puts "%d %d" % [(1e9 * Math.cos(d)), (1e9 * Math.sin(d))]
+end
+=end
+
+=begin
+n = 1000000
 puts n*2
 n.times do |i|
 	i += 1
 	puts "%d %d" % [i, -i]
 	puts "%d %d" % [-i, -i]
 end
+=end
 
 
 =begin
-n = 20
-m = 10
+n = 2000
+m = 1000
 puts n*m
 n.times do |i|
 	m.times do |j|
@@ -17,6 +34,7 @@ n.times do |i|
 		puts "%d %d" % [i, 2*j+1] if i%2 == 1
 	end
 end
+=end
 =begin
 a = []
 r = 2*3*5*7*11*13*17

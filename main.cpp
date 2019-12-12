@@ -1,4 +1,5 @@
 #include <GL/glut.h>
+#include<cmath>
 #include<algorithm>
 #include<vector>
 #include<algorithm>
@@ -19,6 +20,8 @@ extern double operator / (pdd a,    pdd b); //{ return a.first * b.second - a.se
 extern pdd    operator * (double b, pdd a); //{ return pdd(b * a.first, b * a.second); }
 extern pdd    operator + (pdd a,    pdd b); //{ return pdd(a.first + b.first, a.second + b.second); }
 extern pdd    operator - (pdd a,    pdd b); //{ return pdd(a.first - b.first, a.second - b.second); }
+pdd    operator - (pdd a){ return pdd(-a.first, -a.second); }
+pdd    operator + (pdd a){ return pdd(+a.first, +a.second); }
 extern pdd r90(pdd x); //{ return pdd(-x.second, x.first); }
 
 void display() {
@@ -32,20 +35,74 @@ void display() {
 
 	glColor3f(1.0f, 0.0f, 0.0f); // Red
 
+	double sx = -dx - 1./scale, ex = -dx + 1./scale;
+	double sy = dy - 1./scale, ey = dy + 1./scale;
+	pdd box[] = {
+		pdd(sx, sy),
+		pdd(sx, ey),
+		pdd(ex, ey),
+		pdd(ex, sy),
+	};
+	pdd dir[] = {
+		pdd(0, 1),
+		pdd(1, 0),
+		pdd(0, -1),
+		pdd(-1, 0)
+	};
+	auto f = [](pdd a, pdd b, pdd u, pdd v){ 
+		if(fabs(v/b) < 1e-9) return 1e18;
+		return (((a-u)/b) / (v/b));
+	};
 	for(int i = 0; i < edge.size(); i++){
 		pdd d = r90(input[area[i].second] - input[area[i].first]), u, v;
 		pdd m = 0.5 * (input[area[i].second] + input[area[i].first]);
+		auto g = [&](pdd x){
+			return sx - 1e-9 <= x.first && x.first <= ex + 1e-9 &&
+				sy - 1e-9 <= x.second && x.second <= ey + 1e-9; };
 		if(edge[i] == pii(-1, -1)){
-			u = m - 1e3 * d;
-			v = m + 1e3 * d;
+			double mn = 1e18, mx = -1e18;
+			for(int i = 0; i < 4; i++){
+				double x = f(box[i], dir[i], m, d);
+				if(x == 1e18) continue;
+				pdd tp = m + x * d;
+				if(!g(tp)) continue;
+				mn = std::min(mn, x);
+				mx = std::max(mx, x);
+			}
+			if(mn != 1e18) u = m + mn * d, v = m + mx * d;
+			else continue;
 		}
 		else if(edge[i].first == -1){
 			v = vertex[edge[i].second];
-			u = v - 1e3 * d;
+			double mn = 1e18, mx = -1e18;
+			if(g(v)) mx = 0;
+			for(int i = 0; i < 4; i++){
+				double x = f(box[i], dir[i], v, d);
+				if(x == 1e18) continue;
+				pdd tp = v + x * d;
+				if(x >= 0 || !g(tp)) continue;
+				mn = std::min(mn, x);
+				mx = std::max(mx, x);
+			}
+			if(mn == 1e18) continue;
+			u = v + mn * d;
+			v = v + mx * d;
 		}
 		else if(edge[i].second == -1){
 			u = vertex[edge[i].first];
-			v = u + 1e3 * d;
+			double mn = 1e18, mx = -1e18;
+			if(g(u)) mn = 0;
+			for(int i = 0; i < 4; i++){
+				double x = f(box[i], dir[i], u, d);
+				if(x == 1e18) continue;
+				pdd tp = u + x * d;
+				if(x <= 0 || !g(tp)) continue;
+				mn = std::min(mn, x);
+				mx = std::max(mx, x);
+			}
+			if(mx == -1e18) continue;
+			v = u + mx * d;
+			u = u + mn * d;
 		}
 		else{
 			u = vertex[edge[i].first];
@@ -104,6 +161,11 @@ void nextTimestep(int time){
 	glutPostRedisplay();
 }
 
+void keyboard(unsigned char key, int x, int y){
+	if(key == ',') scale *= 1.1;
+	if(key == '.') scale /= 1.1;
+}
+
 int main(int argc, char** argv) {
 	if(argc != 2) return !printf("usage : ./voronoi (input file)\n");
 	freopen(argv[1], "r", stdin);
@@ -120,8 +182,11 @@ int main(int argc, char** argv) {
 		ly = std::min(ly, b);
 		ry = std::max(ry, b);
 	}
-	dx = -(rx+lx)/2, dy = (ry+ly)/2;
+	dx = -(rx+lx)/2;
+	dy = (ry+ly)/2;
 	scale = 1. / std::max(rx-lx, ry-ly);
+	sort(input.begin(), input.end());
+	input.resize(unique(input.begin(), input.end()) - input.begin());
 	printf("start\n");
 	VoronoiDiagram(input, vertex, edge, area);
 	printf("end\n");
@@ -139,6 +204,7 @@ int main(int argc, char** argv) {
 	glutDisplayFunc(display);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
+	glutKeyboardFunc(keyboard);
 	glutTimerFunc(1000.0 / 30, nextTimestep, 0);
 	glutMainLoop();
 	return 0;
