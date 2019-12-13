@@ -3,10 +3,9 @@ Fortune's Algorithm
 + Only 200 lines.
 + It Use splay tree, and worst time complexty is O(n log n).
 + random 1 million(1,000,000) points in 2 second (single core, Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz).
++ [Code](teamnote_VoronoiDiagram.cpp)
 
-![Voronoi Diagram](https://github.com/zigui-ps/VoronoiDiagram/blob/master/inputs/Voronoi.png)
-
-Code is in ```VoronoiDiagram.cpp```
+![Voronoi Diagram](inputs/Voronoi.png)
 
 ## Special thanks to
 https://jacquesh.github.io/post/fortunes-algorithm/
