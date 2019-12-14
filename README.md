@@ -1,8 +1,8 @@
 # Voronoi Diagram
 Fortune's Algorithm
-+ Only 200 lines.
-+ It Use splay tree, and worst time complexty is O(n log n).
-+ random 1 million(1,000,000) points in 2 second (single core, Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz).
++ Only 150 lines.
++ This code uses splay tree. Worst time complexty is O(n log n).
++ Calculating the Voronoi Diagram with 1 million(1,000,000) random points in 2 seconds (single core, Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz).
 + [Code](teamnote_VoronoiDiagram.cpp)
 
 ![Voronoi Diagram](inputs/Voronoi.png)
@@ -31,18 +31,19 @@ n : # of points
 + n != 0
 
 ## function format
+Reading ```main.cpp``` rendering part can be helpful to know about function format.
 - ```std::vector<pdd> input```
   + Inputs. Order can (and will) be changed, so user should pay attention about this.
-  + Additionally, ```input``` will sorted by (y, x) order
+  + Additionally, ```input``` will sorted by (y, x) order.
 - ```std::vector<pdd> vertex```
-  + ```Vertex``` is locations of Voronoi Diagram. It could contain same points, and degree of each point is 3.
+  + ```Vertex``` is locations of Voronoi Diagram's intersection points. It can contain same points, and the degree of each point is 3.
   + This code doesn't compress same points. If you want, then you should implement it.
 - ```std::vector<pii> edge```
-  + ```for(pii c : edge)```, voronoi contains line from ```vertex[c.first]``` to ```vertex[c.second]```.
-  + Voronoi can contain rays or straight line. In this case, rays are depicted as {-1, (point index)}, {(point index), -1}, and straight line are depicted as {-1, -1}. Direction can be calculated using ```area``` array.
+  + ```for(pii c : edge)```, Voronoi Diagram contains line from ```vertex[c.first]``` to ```vertex[c.second]```.
+  + Voronoi can contain rays or straight line. In this case, rays are depicted as {-1, (point index)} or {(point index), -1}, and straight line are depicted as {-1, -1}. A direction of each line can calculate using ```area``` array.
 - ```std::vector<pii> area```
   + Let (a, b) := i-th element of array ```area```, and (u, v) := i-th element of array ```edge```.
-  + Point ```input[a]``` is located CCW of u->v line (or ray, or straight line), and point ```input[b]``` is located CW of u->v line.
+  + Then, Point ```input[a]``` is located CCW of an u->v line (or ray, or straight line), and point ```input[b]``` is located CW of an u->v line.
   + u->v line is a subset of perpendicular bisector of line segment from ```input[a]``` to ```input[b]```.
   + Straight line {a, b}, {-1, -1} through midpoint of ```input[a]``` and ```input[b]```.
   
@@ -53,4 +54,4 @@ n : # of points
 ## And..
 Feel free to ask questions. 
 
-~And sorry for my poor English~
+~And sorry for my poor English.~
