@@ -20,7 +20,7 @@ double pb_int(pdd left, pdd right, double sweepline){
 	int sign = left.second < right.second ? -1 : 1;
 	pdd v = line_intersect(left, right-left, pdd(0, sweepline), pdd(1, 0));
 	double d1 = sz2(0.5 * (left+right) - v), d2 = sz2(0.5 * (left-right));
-	return v.first + sign * sqrt(d1 - d2); }
+	return v.first + sign * sqrt(std::max(0.0, d1 - d2)); }
 class Beachline{
 	public:
 		struct node{
