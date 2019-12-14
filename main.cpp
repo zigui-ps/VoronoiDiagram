@@ -172,6 +172,8 @@ void keyboard(unsigned char key, int x, int y){
 		area.clear();
 		VoronoiDiagram_init(input, vertex, edge, area);
 	}
+	if(key == ',') scale *= 1.1;
+	if(key == '.') scale /= 1.1;
 }
 
 void motion(int x, int y){
@@ -182,11 +184,6 @@ void motion(int x, int y){
 void nextTimestep(int time){
 	glutTimerFunc(1000.0 / 30, nextTimestep, 0);
 	glutPostRedisplay();
-}
-
-void keyboard(unsigned char key, int x, int y){
-	if(key == ',') scale *= 1.1;
-	if(key == '.') scale /= 1.1;
 }
 
 int main(int argc, char** argv) {

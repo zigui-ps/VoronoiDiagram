@@ -44,7 +44,7 @@ double parabola_intersect(pdd left, pdd right, double sweepline){
 	int sign = left.second < right.second ? -1 : 1;
 	pdd v = line_intersect(left, right-left, pdd(0, sweepline), pdd(1, 0));
 	double d1 = sz2(0.5 * (left+right) - v), d2 = sz2(0.5 * (left-right));
-	return v.first + sign * sqrt(d1 - d2);
+	return v.first + sign * sqrt(std::max(0., d1 - d2));
 }
 
 class Beachline{
@@ -204,17 +204,18 @@ void VoronoiDiagram(vector<pdd> &input, vector<pdd> &vertex, vector<pii> &edge, 
 }
 
 void VoronoiDiagram_init(vector<pdd> &input, vector<pdd> &vertex, vector<pii> &edge, vector<pii> &area){
+	while(events.size()) events.pop();
+	beachline = Beachline();
 	auto add_edge = [&](int u, int v, int a, int b, BeachNode* c1, BeachNode* c2){
 		if(c1) c1->end = edge.size()*2;
 		if(c2) c2->end = edge.size()*2 + 1;
 		edge.emplace_back(u, v);
 		area.emplace_back(a, b);
 	};
-	while(events.size()) events.pop();
-	beachline = Beachline();
-	
+	auto write_edge = [&](int idx, int v){ idx%2 == 0 ? edge[idx/2].first = v : edge[idx/2].second = v; };
+	auto add_event = [&](BeachNode* cur){ double nxt; if(beachline.get_event(cur, nxt)) events.emplace(nxt, cur); };
+
 	int n = input.size(), cnt = 0;
-	if(arr) delete arr;
 	arr = new BeachNode[n*4]; sz = 0;
 	sort(input.begin(), input.end(), [](const pdd &l, const pdd &r){
 			return l.second != r.second ? l.second < r.second : l.first < r.first;
@@ -253,6 +254,7 @@ bool VoronoiDiagram_step(vector<pdd> &input, vector<pdd> &vertex, vector<pii> &e
 			beachline.insert(prv = new_node(cur->point, cur->idx), site, 0);
 			add_edge(-1, -1, cur->idx, idx, site, prv);
 			add_event(prv); add_event(cur);
+			break;
 		}
 		else{
 			cur = q.cur, prv = cur->prv, nxt = cur->nxt;
@@ -262,8 +264,8 @@ bool VoronoiDiagram_step(vector<pdd> &input, vector<pdd> &vertex, vector<pii> &e
 			add_edge(v, -1, prv->idx, nxt->idx, 0, prv);
 			beachline.erase(cur);
 			add_event(prv); add_event(nxt);
+			break;
 		}
-		break;
 	}
 	return events.empty();
 }

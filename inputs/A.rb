@@ -1,4 +1,4 @@
-n = 1000000
+n = 100
 puts n
 n.times do |i|
 	puts "%d %d" % [rand() * 1e9, rand() * 1e9]
