@@ -30,6 +30,8 @@ pdd get_circumcenter(pdd p0, pdd p1, pdd p2){
 
 // https://www.youtube.com/watch?v=h_vvP4ah6Ck
 double parabola_intersect(pdd left, pdd right, double sweepline){
+	/*
+	if(dcmp(left.second - right.second) == 0) return (left.first + right.first) / 2.0; /*/
 	auto f2 = [](pdd left, pdd right, double sweepline){
 		int sign = left.first < right.first ? 1 : -1;
 		pdd m = 0.5 * (left+right);
@@ -38,10 +40,10 @@ double parabola_intersect(pdd left, pdd right, double sweepline){
 		double l1 = size(v-w), l2 = sqrt(sq(sweepline-m.second) - sz2(m-w)), l3 = size(left-v);
 		return v.first + (m.first - v.first) * l3 / (l1 + sign * l2);
 	};
+	if(fabs(left.second - right.second) < fabs(left.first - right.first) * EPS) return f2(left, right, sweepline);// */
 	int sign = left.second < right.second ? -1 : 1;
 	pdd v = line_intersect(left, right-left, pdd(0, sweepline), pdd(1, 0));
 	double d1 = sz2(0.5 * (left+right) - v), d2 = sz2(0.5 * (left-right));
-	if(d2 <= d1 * 1e-18) return f2(left, right, sweepline);
 	return v.first + sign * sqrt(d1 - d2);
 }
 
