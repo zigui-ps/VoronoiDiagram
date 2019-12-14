@@ -62,8 +62,8 @@ void display() {
 		pdd d = r90(input[area[i].second] - input[area[i].first]), u, v;
 		pdd m = 0.5 * (input[area[i].second] + input[area[i].first]);
 		auto g = [&](pdd x){
-			return sx - 1e-9 <= x.first && x.first <= ex + 1e-9 &&
-				sy - 1e-9 <= x.second && x.second <= ey + 1e-9; };
+			return sx - 1e-1 <= x.first && x.first <= ex + 1e-1 &&
+				sy - 1e-1 <= x.second && x.second <= ey + 1e-1; };
 		if(edge[i] == pii(-1, -1)){
 			double mn = 1e18, mx = -1e18;
 			for(int i = 0; i < 4; i++){
