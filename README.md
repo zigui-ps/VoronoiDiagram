@@ -1,5 +1,6 @@
 # Voronoi Diagram
 Fortune's Algorithm
++ This code has some double precision issues. 
 + Only 150 lines.
 + This code uses splay tree. Worst time complexty is O(n log n).
 + Calculating the Voronoi Diagram with 1 million(1,000,000) random points in 2 seconds (single core, Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz).
